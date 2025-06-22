@@ -3,6 +3,17 @@ spring:
     name: ai-agent
   profiles:
     active: local
+  ai:
+    vectorstore:
+      pgvector:
+      index-type: HNSW
+      distance-type: COSINE_DISTANCE
+      dimensions: 1536
+      max-document-batch-size: 10000 # Optional: Maximum number of documents per batch
+    mcp:
+      client:
+        stdio:
+          server-configuration: classpath:mcp-servers.json
 server:
   port: 8123
   servlet:
@@ -19,6 +30,10 @@ springdoc:
     - group: 'default'
       paths-to-match: '/**'
       packages-to-scan: com.zyk.aiagent.controller
+
+
+
+
 # knife4j???????????????
 knife4j:
   enable: true

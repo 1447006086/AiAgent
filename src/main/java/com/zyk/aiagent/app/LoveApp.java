@@ -1,12 +1,19 @@
 package com.zyk.aiagent.app;
 
 import com.zyk.aiagent.chatmemory.FileBasedChatMemory;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.MyLoggerAdvisor;
+import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor;
+import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.tool.ToolCallback;
+import org.springframework.ai.tool.ToolCallbackProvider;
+import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -24,6 +31,11 @@ public class LoveApp {
             "单身，爱，已经三种状态顾问：单身状态顾问社交圈展及追求心灵目标的困扰;" +
             "爱状态顾问通，爱不同引发的争议;已状态顾问家庭责任与亲属关系处理的问题。" +
             "详细引导用户描述经过、对方反应及自我想法，即可提供专门的解决方案。";
+    @Autowired
+    private VectorStore loveAppVectorStore;
+
+    @Resource
+    private VectorStore pgVectorVectorStore;
 
     /**
      * 初始化 chatClient
@@ -86,4 +98,84 @@ public class LoveApp {
         return loveReport;
     }
 
+    //AI恋爱知识问答功能
+    @Resource
+    private VectorStore vectorStore;
+
+    @Resource
+    private Advisor LoveAppRagCloudAdvisor;
+
+    /**
+     * 知识库对话
+     * @param message
+     * @param chatId
+     * @return
+     */
+    public String doChatWithRag(String message, String chatId) {
+        ChatResponse chatResponse = chatClient.prompt()
+                .user(message)
+                .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
+                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
+                //开启日志
+                .advisors(new MyLoggerAdvisor())
+                //应用rag知识库问答
+//                .advisors(new QuestionAnswerAdvisor(loveAppVectorStore))
+                //应用rag检索增强服务
+//                .advisors(LoveAppRagCloudAdvisor)
+                //应用rag检索增强服务（基于pgvector知识库服务）
+                .advisors(new QuestionAnswerAdvisor(pgVectorVectorStore))
+                .call()
+                .chatResponse();
+        String content = chatResponse.getResult().getOutput().getText();
+        log.info("content:{}",content);
+        return content;
+    }
+
+    //AI调用工具
+    @Resource
+    private ToolCallback[] allTools;
+
+
+    /**
+     * AI对话恋爱报告 （支持调用工具）
+     * @param message
+     * @param chatId
+     * @return
+     */
+    public String doChatWithTools(String message, String chatId) {
+        ChatResponse chatResponse = chatClient.prompt()
+                .user(message)
+                .advisors(new MyLoggerAdvisor())
+                .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
+                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
+                .tools(allTools)
+                .call()
+                .chatResponse();
+        String content = chatResponse.getResult().getOutput().getText();
+        log.info("content:{}",content);
+        return content;
+    }
+
+    @Resource
+    private ToolCallbackProvider toolCallbackProvider;
+
+    /**
+     * AI对话恋爱报告 （支持调用工具）
+     * @param message
+     * @param chatId
+     * @return
+     */
+    public String doChatWithMcp(String message, String chatId) {
+        ChatResponse chatResponse = chatClient.prompt()
+                .user(message)
+                .advisors(new MyLoggerAdvisor())
+                .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
+                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
+                .tools(toolCallbackProvider)
+                .call()
+                .chatResponse();
+        String content = chatResponse.getResult().getOutput().getText();
+        log.info("content:{}",content);
+        return content;
+    }
 }
