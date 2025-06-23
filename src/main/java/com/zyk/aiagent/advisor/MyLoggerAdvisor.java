@@ -3,9 +3,10 @@
 // (powered by FernFlower decompiler)
 //
 
-package org.springframework.ai.chat.client.advisor;
+package com.zyk.aiagent.advisor;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.client.advisor.api.*;
 import org.springframework.ai.chat.model.MessageAggregator;
 import reactor.core.publisher.Flux;

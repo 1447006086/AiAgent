@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: image-search-mcp-server
+  profiles:
+    active: stdio
+  ai:
+    mcp:
+      server:
+        stdio: true
+  main:
+    web-application-type: none
+
+logging:
+  pattern:
+    console: ""
+
+server:
+  port: 8127

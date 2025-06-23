@@ -1,11 +1,11 @@
 package com.zyk.aiagent.app;
 
+import com.zyk.aiagent.advisor.MyLoggerAdvisor;
 import com.zyk.aiagent.chatmemory.FileBasedChatMemory;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
-import org.springframework.ai.chat.client.advisor.MyLoggerAdvisor;
 import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.model.ChatModel;
@@ -159,23 +159,20 @@ public class LoveApp {
     @Resource
     private ToolCallbackProvider toolCallbackProvider;
 
-    /**
-     * AI对话恋爱报告 （支持调用工具）
-     * @param message
-     * @param chatId
-     * @return
-     */
     public String doChatWithMcp(String message, String chatId) {
-        ChatResponse chatResponse = chatClient.prompt()
+        ChatResponse response = chatClient
+                .prompt()
                 .user(message)
-                .advisors(new MyLoggerAdvisor())
                 .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
                         .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
+                // 开启日志，便于观察效果
+                .advisors(new MyLoggerAdvisor())
                 .tools(toolCallbackProvider)
                 .call()
                 .chatResponse();
-        String content = chatResponse.getResult().getOutput().getText();
-        log.info("content:{}",content);
+        String content = response.getResult().getOutput().getText();
+        log.info("content: {}", content);
         return content;
     }
+
 }
