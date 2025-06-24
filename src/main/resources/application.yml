@@ -3,6 +3,8 @@ spring:
     name: ai-agent
   profiles:
     active: local
+  webflux:
+    timeout: 30000
   ai:
     mcp:
       client:
